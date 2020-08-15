@@ -2,7 +2,7 @@
 
 ## Info
 [Mama John's ymap](https://forum.cfx.re/t/mama-johns-pizza-place/697391)
-I did not create the model.
+- I did not create the model.
 
 ## Setup
 1. Add esx_pizzajob to your resources and add 'start esx_pizzajob' to your server.cfg
