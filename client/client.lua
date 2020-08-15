@@ -1,6 +1,8 @@
 ESX = nil
 local PlayerData = {}
 isWorking = false
+local npcs = {}
+local blipLocs = {}
 Citizen.CreateThread(function()
 	while ESX == nil do
 		TriggerEvent('esx:getSharedObject', function(obj) ESX = obj end)
@@ -18,7 +20,7 @@ AddEventHandler('esx:setJob', function(job)
   PlayerData.job = job 
 end)
 Citizen.CreateThread(function()
-    blips = Config.blipLocations
+    local blips = Config.blipLocations
     -- radar_michael_family
     -- 78
     for k in pairs(blips) do
@@ -66,7 +68,14 @@ Citizen.CreateThread(function()
                     if IsControlJustReleased(1, 44) then
                         isWorking = false
                         TriggerEvent('esx:showNotification', 'You ~g~ended your shift~w~.')
+                        TriggerServerEvent('esx_pizzajob:removeInventoryItem', 'pizza', 1)
                         TriggerServerEvent('esx_pizzajob:setOnDuty', false)
+                        for i, blip in pairs(blipLocs) do
+                            RemoveBlip(blip)
+                        end
+                        for i, npc in pairs(npcs) do
+                            SetEntityAsNoLongerNeeded(npc)
+                        end
                     end
                 else
                     YMDrawText3D(coords[k].x, coords[k].y, coords[k].z, "Press ~y~[E]~w~ to ~y~start working.")
@@ -111,11 +120,17 @@ AddEventHandler('esx_pizzajob:startWork', function()
         isWorking = true
         TriggerServerEvent('esx_pizzajob:setOnDuty', true)
         if ESX.PlayerData.job.grade_name == 'deliveryDriver' and not isGoingToLocation then
+            for i, npc in pairs(npcs) do
+                SetEntityAsNoLongerNeeded(npc)
+            end
             TriggerServerEvent('esx_pizzajob:addInventoryItem', 'pizza', 1)
             local coords = Config.deliverLocations
             local numOfLocations = 0
             for k in pairs(coords) do
                 numOfLocations = numOfLocations + 1
+            end
+            for i, blip in pairs(blipLocs) do
+                RemoveBlip(blip)
             end
             local location = math.random(numOfLocations)
             location = coords[location]
@@ -128,12 +143,13 @@ AddEventHandler('esx_pizzajob:startWork', function()
             BeginTextCommandSetBlipName("STRING")
             AddTextComponentString("Delivery Location")
             EndTextCommandSetBlipName(blip)
+            table.insert(blipLocs, blip)
             local head = math.random(100, 200)
             local npc = CreatePed(4, 0xA1435105, location.x + 2, location.y, location.z, head, false, true)
             SetEntityHeading(head)
 	        SetEntityInvincible(npc, true)
             SetBlockingOfNonTemporaryEvents(npc, true)
-            Citizen.Wait(1000)
+            Citizen.Wait(3000)
             FreezeEntityPosition(npc, true)
             local isGoingToLocation = true
             while isGoingToLocation do
